@@ -1,0 +1,61 @@
+# E2E CI：连真实后端（FastAPI + PostgreSQL）+ 前端（vite dev），跑 Playwright 工单主流程。
+# Playwright 的 webServer 配置自动拉起后端/前端，本 workflow 只需准备依赖 + 数据库 + 浏览器。
+name: E2E CI
+
+on:
+  push:
+    branches: [main]
+
+# 连续 push 时取消还在跑的旧提交，省执行额度
+concurrency:
+  group: ci-e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    # PostgreSQL：无身份验证外壳状态，与后端连接串一致
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: plagent
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      # 后端连接串：Playwright webServer 启动后端起 uvicorn 时读此变量建表/seed
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/plagent
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      # 后端依赖（pytest/httpx；uvicorn 在 fastapi[standard] 已含）
+      - run: uv sync --group dev
+        working-directory: server
+      # 前端依赖（含 @playwright/test）
+      - run: npm ci
+        working-directory: frontend
+      # 安装 Chromium（含系统依赖）
+      - run: npx playwright install --with-deps chromium
+        working-directory: frontend
+      # 跑 E2E（webServer 自动拉起 uvicorn + vite dev）
+      - run: npx playwright test
+        working-directory: frontend
+      # 失败时上传 Playwright 报告（trace/screenshot）便于排查
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: frontend/playwright-report/
+          retention-days: 7

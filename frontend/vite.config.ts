@@ -13,11 +13,11 @@ export default defineConfig({
     ],
     server: {
         proxy: {
-            // 前缀匹配覆盖 /chat/completions、/chat/resume/:id、/chat/cancel/:id
-            '/chat': { target: 'http://127.0.0.1:8000', changeOrigin: true },
-            '/conversations': { target: 'http://127.0.0.1:8000', changeOrigin: true },
             '/login': { target: 'http://127.0.0.1:8000', changeOrigin: true },
             '/logout': { target: 'http://127.0.0.1:8000', changeOrigin: true },
+            // 工单系统 API：统一 /api 前缀（/api/me、/api/ticket-config、/api/tickets、/api/notifications、/api/dashboard）
+            // 与前端路由 /tickets、/dashboard、/notifications 隔离，避免整页导航被代理成 API 请求
+            '/api': { target: 'http://127.0.0.1:8000', changeOrigin: true },
         },
     },
 })
