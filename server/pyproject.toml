@@ -6,14 +6,15 @@ dependencies = [
     "asyncpg>=0.32.0",
     "bcrypt>=4.2.0",
     "fastapi[standard]>=0.141.1",
-    "openai>=3.19.2",
     "pyjwt>=2.8.0",
     "python-dotenv>=1.2.3",
-    "tokenizers>=0.21",
 ]
 [tool.fastapi]
 entrypoint = "main:app"
 
 [dependency-groups]
-dev = ["pytest>=8"]
+dev = [
+    "httpx>=0.28.1",
+    "pytest>=8",
+]
 

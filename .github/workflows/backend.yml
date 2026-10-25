@@ -1,0 +1,26 @@
+# 后端 CI：push 到 main 时跑 pytest（纯函数 + 接口测试，均不连真实数据库）
+name: Backend CI
+
+on:
+  push:
+    branches: [main]
+
+# 连续 push 时取消还在跑的旧提交，省执行额度
+concurrency:
+  group: ci-backend-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        # 后端在子目录，所有 run 步骤都在这里执行
+        working-directory: server
+    steps:
+      - uses: actions/checkout@v4
+      # uv 按 uv.lock 精确还原环境，杜绝版本漂移
+      - uses: astral-sh/setup-uv@v5
+      # 装运行时依赖 + dev 组（pytest、httpx）
+      - run: uv sync --group dev
+      - run: uv run pytest tests/ -q

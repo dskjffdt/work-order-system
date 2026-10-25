@@ -17,3 +17,9 @@ frontend/dist/
 
 # 个人简历（不上仓库）
 resume.md
+
+# Trae 工作区
+.trae/
+
+# Playwright 测试产物
+frontend/test-results/

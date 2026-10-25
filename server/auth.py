@@ -2,9 +2,8 @@ import time
 
 import bcrypt
 import jwt
-from fastapi import HTTPException, Request
-
 from config import COOKIE_SECURE, JWT_EXPIRE_HOURS, JWT_SECRET
+from fastapi import HTTPException, Request
 
 # 会话 cookie 名（HttpOnly，前端 JS 读不到，防 XSS 窃取 token）
 SESSION_COOKIE = "plagent_token"

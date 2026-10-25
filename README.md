@@ -1,10 +1,38 @@
-# 星野 (PL-Agent)
+# 工单管理系统
 
-类 ChatGPT 的 AI 流式对话应用。
+独立设计与实现的全栈工单管理平台，覆盖工单创建、状态流转、权限控制、消息通知与运营看板，提供在线演示与多角色切换。
 
-- **前端** React + TypeScript + Vite：fetch + ReadableStream 手写 SSE 解析，看门狗检测半开连接后按事件序号断线续传（指数退避），多会话并行流式按会话隔离、切换不中断，rAF 帧合批渲染，消息树分支重试，会话 id 前端生成实现乐观导航
-- **后端** FastAPI + PostgreSQL：生成任务与 HTTP 连接解耦（事件按 seq 缓冲、重连补发、无订阅宽限取消），token 预算裁剪 + 滚动摘要 + 长期记忆注入上下文，tool_calls 按 index 聚合后串行执行并回喂，JWT HttpOnly Cookie 鉴权，中断兜底落库（JSONB 原子追加）
+## 功能特性
 
-## Tech Stack
+- **状态机驱动详情页**：基于状态机配置统一各状态下的操作按钮、表单字段与流程时间线，新增工单类型通过配置扩展，减少重复分支代码
+- **Schema 驱动动态表单**：支持字段显隐、联动校验与只读回填，新增工单类型无需修改页面代码
+- **权限矩阵控制**：路由级、按钮级、字段级三位一体权限控制，支持多角色切换演示与敏感字段脱敏
+- **虚拟滚动列表**：针对万级工单数据固定行高 + overscan 渲染，首屏 1637ms → 10ms，DOM 节点减少 99.8%
+- **SSE 消息中心**：工单流转实时通知，断线重连按序号补发去重，未读数聚合
+- **测试与 CI**：pytest / Vitest 覆盖核心用例，Playwright 连真实后端覆盖创建到关单主流程，GitHub Actions 自动化测试
 
-React / TypeScript / Vite / Zustand / Tailwind CSS · Python / FastAPI / asyncpg / PostgreSQL / PyJWT / OpenAI API
+## 技术栈
+
+| 层 | 技术 |
+| --- | --- |
+| 前端 | React 19 / TypeScript / Vite / Zustand / TanStack Query / React Router / Tailwind CSS / ECharts |
+| 后端 | Python / FastAPI / asyncpg / PostgreSQL / PyJWT / bcrypt |
+| 测试 | pytest / Vitest / Playwright |
+
+## 目录结构
+
+```
+├── frontend/   # React + Vite + TypeScript 前端
+└── server/     # FastAPI + PostgreSQL 后端
+```
+
+## 快速开始
+
+1. 后端：在 `server/` 下参照 `.env.example` 配置 PostgreSQL 连接，然后 `uv sync && uv run fastapi dev`
+2. 前端：在 `frontend/` 下 `npm install && npm run dev`
+
+## 测试
+
+- 后端：`cd server && uv run pytest`
+- 前端单测：`cd frontend && npm run test`
+- 端到端：`cd frontend && npm run test:e2e`

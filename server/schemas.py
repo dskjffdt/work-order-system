@@ -1,5 +1,3 @@
-from uuid import UUID
-
 from pydantic import BaseModel, Field
 
 
@@ -9,12 +7,26 @@ class LoginRequest(BaseModel):
     password: str = Field(max_length=128)
 
 
-class ChatRequest(BaseModel):
-    # 单条提问上限 20000 字，防止超长输入打爆模型与流式响应
-    prompt: str = Field(max_length=20000)
-    # 归属会话（UUIDv7，字符串随请求发送）：id 由前端生成——已存在则校验归属，不存在则以此 id 新建
-    conversation_id: UUID
-    # 分支挂点：新轮默认挂链尾；重试时=被重试 assistant 的父节点（user 节点）id
-    parent_message_id: UUID | None = None
-    # 重试模式：不落库 user 消息，新 assistant 直接挂 parent_message_id 下形成分支
-    retry: bool = False
+# ---- 工单系统请求模型 ----
+
+
+class TicketCreateRequest(BaseModel):
+    ticket_type: str
+    # 自定义字段值：key 为表单 schema 里的字段 key（title/detail/priority/...）
+    fields: dict = Field(default_factory=dict)
+
+
+class TicketTransitionRequest(BaseModel):
+    action: str
+    # 流转附加表单值（如 close 的 note、resolve 的 solution）
+    extra: dict = Field(default_factory=dict)
+
+
+class RoleSwitchRequest(BaseModel):
+    # 切换后的角色（演示多角色：admin / agent / user）
+    role: str
+
+
+class SeedRequest(BaseModel):
+    # 造演示工单数量（虚拟滚动 / 看板数据来源），演示脚本用
+    n: int = Field(default=10000, ge=0, le=50000)
